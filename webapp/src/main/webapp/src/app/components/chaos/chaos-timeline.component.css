@@ -1,0 +1,418 @@
+.chaos-timeline-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-subtle);
+  border-top: 1px solid var(--divider-light);
+  font-size: 12px;
+}
+
+.tl-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.tl-inner {
+  position: relative;
+}
+
+/* ---------------------------------------------------------------- Rows ---- */
+
+.tl-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.tl-header {
+  flex: 0 0 280px;
+  width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  background: var(--background);
+  border-right: 1px solid var(--divider-muted);
+  border-bottom: 1px solid var(--surface-border);
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-width: 0;
+}
+
+.tl-lane {
+  position: relative;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.track-row .tl-lane {
+  height: 40px;
+  cursor: default;
+}
+
+.track-row.selected .tl-lane {
+  background: var(--surface-hover);
+}
+
+.param-row-line .tl-lane {
+  height: 36px;
+}
+
+/* ---------------------------------------------------------------- Ruler ---- */
+
+.ruler-row {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.tl-header.corner {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  border-bottom: 1px solid var(--divider-muted);
+}
+
+.corner-time {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-strong);
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.corner-time .total {
+  color: var(--text-muted);
+}
+
+.zoom-controls {
+  display: flex;
+  gap: 3px;
+}
+
+.zoom-controls .btn {
+  padding: 0 5px;
+  line-height: 16px;
+}
+
+.tl-lane.ruler {
+  height: 30px;
+  cursor: ew-resize;
+  background: var(--surface-muted);
+  user-select: none;
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.tick-line {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 8px;
+  background: var(--divider-muted);
+}
+
+.tick-label {
+  position: absolute;
+  bottom: 9px;
+  left: 3px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- Playhead ---- */
+
+.playhead-handle {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid var(--chaos-playhead, #e10098);
+  transform: translateX(-6px);
+  cursor: ew-resize;
+}
+
+.tl-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--chaos-playhead, #e10098);
+  /* Above the sticky ruler row (z-index 4) so the cursor spans the full timeline height. */
+  z-index: 5;
+  pointer-events: none;
+}
+
+.tl-playhead .playhead-cap {
+  position: sticky;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  margin-left: -4px;
+  border-radius: 2px;
+  background: var(--chaos-playhead, #e10098);
+}
+
+/* ---------------------------------------------------------------- Clips ---- */
+
+.clip {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border: 1px solid;
+  border-radius: 3px;
+  cursor: grab;
+  overflow: hidden;
+}
+
+.clip:active {
+  cursor: grabbing;
+}
+
+.clip.selected {
+  box-shadow: 0 0 0 1.5px var(--chaos-accent, #9c27b0);
+}
+
+.clip-label {
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  border-radius: 2px;
+  padding: 0 4px;
+}
+
+.clip-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.clip-edge.left {
+  left: 0;
+}
+
+.clip-edge.right {
+  right: 0;
+}
+
+.clip-edge:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* ---------------------------------------------------------------- Headers ---- */
+
+.track-header {
+  height: 40px;
+}
+
+/* Stacking-order drag grip at the start of each track header */
+.drag-handle {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: var(--chaos-accent, #9c27b0);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Reorder feedback */
+.track-row.dragging {
+  opacity: 0.35;
+}
+
+.track-row.drop-above {
+  box-shadow: inset 0 3px 0 var(--chaos-playhead, #e10098);
+}
+
+.track-row.drop-below {
+  box-shadow: inset 0 -3px 0 var(--chaos-playhead, #e10098);
+}
+
+.caret-btn {
+  border: 0;
+  background: transparent;
+  padding: 2px 3px;
+  color: var(--text-secondary);
+  width: 18px;
+}
+
+.track-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.track-name {
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.track-target {
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: auto;
+}
+
+.track-header .remove-btn {
+  opacity: 0;
+  padding: 2px 4px;
+}
+
+.track-header:hover .remove-btn {
+  opacity: 1;
+}
+
+.rename-input {
+  width: 150px;
+  height: 22px;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+.param-header {
+  height: 36px;
+  padding-left: 32px;
+  background: var(--surface-subtle);
+}
+
+.param-name {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Inline STEP curve of a parameter lane */
+.lane-curve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lane-curve .curve-area {
+  stroke: none;
+  fill: var(--text-muted);
+  opacity: 0.1;
+}
+
+.lane-curve .curve-area.probability {
+  fill: var(--status-success);
+}
+
+.lane-curve .curve-area.status {
+  fill: var(--status-warning);
+}
+
+.lane-curve .curve-line {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.lane-curve .curve-line.probability {
+  stroke: var(--status-success);
+}
+
+.lane-curve .curve-line.status {
+  stroke: var(--status-warning);
+}
+
+.kf-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.param-lane {
+  background: var(--surface-subtle);
+}
+
+.param-lane.selected {
+  background: var(--surface-hover);
+}
+
+/* ---------------------------------------------------------------- Keyframes ---- */
+
+.keyframe {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  cursor: ew-resize;
+  z-index: 2;
+  /* Generic param colors so every catalog-driven param renders; .probability and .status override them. */
+  background: var(--text-muted);
+  border: 1px solid var(--text-secondary);
+}
+
+.keyframe.probability {
+  background: var(--status-success);
+  border: 1px solid var(--status-success-bright);
+}
+
+.keyframe.status {
+  background: var(--status-warning);
+  border: 1px solid var(--status-warning);
+}
+
+.keyframe.dormant {
+  opacity: 0.35;
+}
+
+.keyframe.selected {
+  box-shadow: 0 0 0 2px var(--chaos-playhead, #e10098);
+  z-index: 3;
+}
+
+/* ---------------------------------------------------------------- Empty ---- */
+
+.tl-empty {
+  padding: 24px 28px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.tl-empty .fa {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 6px;
+}

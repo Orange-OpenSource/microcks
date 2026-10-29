@@ -20,6 +20,7 @@ import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
+import io.github.microcks.chaos.FaultInjector;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ParameterConstraintUtil;
@@ -46,7 +47,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 import javax.annotation.CheckForNull;
@@ -69,6 +69,7 @@ public class RestController {
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor invocationProcessor;
+   private final FaultInjector faultInjector;
 
    @Value("${mocks.rest.enable-cors-policy}")
    private Boolean enableCorsPolicy;
@@ -85,12 +86,14 @@ public class RestController {
     * @param serviceRepository   The repository to access services definitions
     * @param resourceRepository  The repository to access resources definitions
     * @param invocationProcessor The invocation processor to apply REST mocks dispatching logic
+    * @param faultInjector       The injector applying chaos faults to mock responses
     */
    public RestController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         RestInvocationProcessor invocationProcessor) {
+         RestInvocationProcessor invocationProcessor, FaultInjector faultInjector) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.invocationProcessor = invocationProcessor;
+      this.faultInjector = faultInjector;
    }
 
    @SuppressWarnings("java:S3752")
@@ -287,7 +290,11 @@ public class RestController {
 
       ResponseResult response = invocationProcessor.processInvocation(ic, startTime, delay, body,
             headers.asMultiValueMap(), request);
-      return new ResponseEntity<>(response.content(), response.headers(), response.status());
+      ResponseEntity<byte[]> generated = new ResponseEntity<>(response.content(), response.headers(),
+            response.status());
+      String serviceName = ic.service() != null ? ic.service().getName() : null;
+      String operationName = ic.operation() != null ? ic.operation().getName() : null;
+      return faultInjector.inject(serviceName, operationName, generated);
    }
 
    /** Find the invocation context for this mock request. */

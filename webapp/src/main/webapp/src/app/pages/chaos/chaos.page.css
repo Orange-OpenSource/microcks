@@ -1,0 +1,10 @@
+.chaos-page {
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+}
+
+.chaos-page app-chaos-editor {
+  flex: 1;
+  min-height: 0;
+}

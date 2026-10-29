@@ -99,6 +99,8 @@ public class SecurityConfiguration {
                .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole(ROLE_ADMIN)
                .requestMatchers(HttpMethod.PUT, "/api/secrets/*").hasAnyRole(ROLE_ADMIN)
+               .requestMatchers(HttpMethod.GET, "/api/chaos/**").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/chaos/**").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.DELETE, "/api/secrets/*").hasAnyRole(ROLE_ADMIN).anyRequest().permitAll());
          // spotless:on
 

@@ -1,0 +1,252 @@
+.effect-controls {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  font-size: 13px;
+}
+
+.effects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--divider-light);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-subtle);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-title .count {
+  background: var(--surface-muted);
+  border-radius: 8px;
+  padding: 0 7px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ------------------------------------------------------------- Add menu ---- */
+
+.add-menu {
+  position: relative;
+}
+
+.add-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.add-menu-list {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 260px;
+  background: var(--background);
+  border: 1px solid var(--divider-muted);
+  border-radius: 3px;
+  box-shadow: 0 2px 6px var(--shadow-medium);
+  z-index: 21;
+}
+
+.add-menu-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  border-radius: 2px;
+}
+
+.add-menu-item:hover {
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.add-menu-item .fa {
+  margin-top: 3px;
+  color: var(--chaos-accent, #9c27b0);
+}
+
+.item-label {
+  display: block;
+  font-weight: 600;
+}
+
+.item-description {
+  display: block;
+  color: var(--text-secondary);
+}
+
+
+/* ------------------------------------------------------------- Editor ---- */
+
+.modifier-editor {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.editor-section {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-subtle);
+  margin-bottom: 4px;
+}
+
+.editor-section select {
+  margin-bottom: 5px;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.param-row.selected {
+  background: var(--surface-hover);
+}
+
+.param-row .param-name {
+  flex: 0 0 88px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.param-input {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.param-input .form-control {
+  width: 74px;
+  text-align: right;
+  font-family: monospace;
+}
+
+.param-input .unit {
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* After Effects stopwatch icon */
+.icon-btn {
+  border: 0;
+  background: transparent;
+  padding: 3px 4px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  color: var(--text-strong);
+}
+
+.icon-btn.stopwatch.on {
+  color: var(--chaos-accent, #9c27b0);
+}
+
+.diamond-btn .diamond {
+  display: block;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  border: 1px solid var(--text-muted);
+  background: transparent;
+}
+
+.diamond-btn.at-playhead .diamond {
+  background: var(--chaos-accent, #9c27b0);
+  border-color: var(--chaos-accent, #9c27b0);
+}
+
+/* Mini keyframe strip under each parameter input: diamonds at their time across the duration. */
+.param-keyframes {
+  position: relative;
+  height: 12px;
+  margin: 0 0 2px 94px;
+  border-bottom: 1px solid var(--divider-light);
+  cursor: pointer;
+}
+
+.param-keyframes .keyframe-dot {
+  position: absolute;
+  top: 2px;
+  width: 7px;
+  height: 7px;
+  transform: translateX(-50%) rotate(45deg);
+  border: 1px solid var(--text-muted);
+  background: var(--surface-muted);
+}
+
+.param-keyframes .keyframe-dot.at-playhead {
+  background: var(--chaos-accent, #9c27b0);
+  border-color: var(--chaos-accent, #9c27b0);
+}
+
+.param-live {
+  margin: -1px 0 6px 94px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.param-live .live-label {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  background: var(--surface-muted);
+  border-radius: 2px;
+  padding: 0 4px;
+  margin-right: 3px;
+}
+
+.param-live .kf-count {
+  float: right;
+}
+
+.editor-footer {
+  border-top: 1px solid var(--divider-light);
+  padding-top: 10px;
+}
+
+.no-selection {
+  padding: 20px 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.no-selection .fa {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 6px;
+}

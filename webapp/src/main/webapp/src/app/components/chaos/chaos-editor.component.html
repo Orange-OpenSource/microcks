@@ -1,0 +1,201 @@
+<div class="chaos-editor">
+  @if (editor.loading()) {
+    <div class="chaos-loading">
+      <span class="fa fa-spinner fa-spin"></span> Loading experiment...
+    </div>
+  } @else if (!editor.experiment()) {
+    <div class="chaos-empty">
+      <div class="empty-icon"><i class="fa fa-bolt"></i></div>
+      <h4>No chaos experiment yet</h4>
+      <p class="text-muted">
+        Create an experiment, add fault modifiers to your mocked operations and arrange them on a
+        keyframe timeline.
+      </p>
+      <button class="btn btn-primary" (click)="openCreationForm()">
+        <span class="fa fa-plus"></span> Create an experiment
+      </button>
+      @if (creating()) {
+        <div class="creation-form">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Experiment name"
+            [(ngModel)]="newExperimentName"
+            (keyup.enter)="submitCreation()"
+          />
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Duration (s)"
+              [(ngModel)]="newExperimentSeconds"
+              (keyup.enter)="submitCreation()"
+            />
+            <span class="input-group-addon">s</span>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="submitCreation()" [disabled]="!newExperimentName.trim()">
+            Create
+          </button>
+          <button class="btn btn-default btn-sm" (click)="closeCreationForm()">Cancel</button>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Toolbar -->
+    <div class="chaos-toolbar">
+      <div class="toolbar-row">
+        <div class="toolbar-group">
+          <select
+            class="form-control form-control-sm experiment-select"
+            [ngModel]="editor.experiment()?.id"
+            (ngModelChange)="onExperimentSelect($event)"
+            title="Select the experiment to edit"
+          >
+            @for (experiment of editor.experiments(); track experiment.id) {
+              <option [value]="experiment.id">
+                {{ experiment.name }} · {{ experiment.state }}{{ editor.dirty() && experiment.id === editor.experiment()?.id ? ' *' : '' }}
+              </option>
+            }
+          </select>
+          <button class="btn btn-default btn-sm" (click)="openCreationForm()" title="Create a new experiment">
+            <span class="fa fa-plus"></span> New
+          </button>
+          @if (creating()) {
+            <span class="creation-inline">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Name"
+                [(ngModel)]="newExperimentName"
+                (keyup.enter)="submitCreation()"
+              />
+              <input
+                type="text"
+                class="form-control form-control-sm duration-input"
+                placeholder="60"
+                [(ngModel)]="newExperimentSeconds"
+                (keyup.enter)="submitCreation()"
+              />
+              <span class="unit">s</span>
+              <button class="btn btn-primary btn-sm" (click)="submitCreation()" [disabled]="!newExperimentName.trim()">
+                Create
+              </button>
+              <button class="btn btn-default btn-sm" (click)="closeCreationForm()">
+                <span class="fa fa-close"></span>
+              </button>
+            </span>
+          }
+        </div>
+
+        <div class="toolbar-group">
+          <input
+            type="text"
+            class="form-control form-control-sm name-input"
+            placeholder="Experiment name"
+            [ngModel]="editor.experiment()?.name"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            (ngModelChange)="onNameChange($event)"
+            (keyup.enter)="$event.target.blur()"
+          />
+          <div class="input-group input-group-sm duration-editor">
+            <input
+              type="text"
+              class="form-control"
+              title="Experiment duration in seconds"
+              [ngModel]="durationText()"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="onDurationChange($event)"
+              (keyup.enter)="$event.target.blur()"
+            />
+            <span class="input-group-addon">s</span>
+          </div>
+        </div>
+
+        <div class="toolbar-group lifecycle">
+          @if (editor.state() !== ExperimentState.RUNNING) {
+            <button
+              class="btn btn-success btn-sm"
+              (click)="editor.start()"
+              title="Run the experiment from the beginning"
+            >
+              <span class="fa fa-play"></span> Start
+            </button>
+          }
+          <button
+            class="btn btn-danger btn-sm"
+            (click)="editor.stop()"
+            [disabled]="editor.state() === ExperimentState.STOPPED"
+            title="Stop the experiment"
+          >
+            <span class="fa fa-stop"></span> Stop
+          </button>
+          <button
+            class="btn btn-danger btn-sm"
+            (click)="editor.deleteExperiment()"
+            [disabled]="editor.saving()"
+            title="Delete this experiment"
+          >
+            <span class="fa fa-trash"></span> Delete
+          </button>
+          <span
+            class="state-badge"
+            [class.state-running]="editor.state() === ExperimentState.RUNNING"
+          >
+            <span class="state-dot"></span>
+            {{ editor.state() }}
+          </span>
+          @if (editor.running() && !editor.followServer()) {
+            <button class="btn btn-link btn-sm follow-btn" (click)="editor.resumeFollowing()" title="Re-sync the playhead with the running experiment">
+              <span class="fa fa-link"></span> re-sync
+            </button>
+          }
+        </div>
+
+        <div class="toolbar-group right">
+          <span class="playhead-label" title="Playhead position">{{ formatTime(editor.playheadMs()) }}</span>
+          <button
+            class="btn btn-primary btn-sm"
+            (click)="editor.save()"
+            [disabled]="!editor.dirty() || editor.saving()"
+            title="Save the experiment timeline"
+          >
+            @if (editor.saving()) {
+              <span class="fa fa-spinner fa-spin"></span>
+            } @else {
+              <span class="fa fa-floppy-o"></span>
+            }
+            Save@if (editor.dirty()) { * }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main area: API catalog graph on the left, effect controls on the right -->
+    <div class="chaos-main">
+      <app-chaos-target-graph class="chaos-graph"></app-chaos-target-graph>
+      <div
+        class="effects-resizer"
+        (mousedown)="startEffectsResize($event)"
+        title="Drag to resize the panel"
+      >
+        <div class="resizer-grip-v"></div>
+      </div>
+      <app-chaos-effect-controls
+        class="chaos-effects"
+        [style.width.px]="effectsWidth()"
+      ></app-chaos-effect-controls>
+    </div>
+
+    <!-- Resizable separator -->
+    <div
+      class="timeline-resizer"
+      (mousedown)="startTimelineResize($event)"
+      title="Drag to resize the timeline"
+    >
+      <div class="resizer-grip"></div>
+    </div>
+
+    <!-- After Effects style timeline -->
+    <app-chaos-timeline class="chaos-timeline" [style.height.px]="timelineHeight()"></app-chaos-timeline>
+  }
+</div>
