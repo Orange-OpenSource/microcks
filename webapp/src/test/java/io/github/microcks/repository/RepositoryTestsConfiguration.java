@@ -32,7 +32,8 @@ import java.net.InetSocketAddress;
  * @author laurent
  */
 @TestConfiguration
-@ComponentScan(basePackages = { "io.github.microcks.security", "io.github.microcks.service" })
+@ComponentScan(basePackages = { "io.github.microcks.security", "io.github.microcks.service",
+      "io.github.microcks.chaos" })
 @EnableMongoRepositories(basePackages = { "io.github.microcks.repository" })
 public class RepositoryTestsConfiguration extends AbstractMongoClientConfiguration {
 
