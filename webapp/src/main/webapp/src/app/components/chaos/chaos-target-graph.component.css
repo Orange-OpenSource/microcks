@@ -1,0 +1,70 @@
+.target-graph {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.graph-hint {
+  padding: 8px 12px 4px;
+}
+
+.graph-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-subtle);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint-text {
+  margin: 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.modifier-count-badge {
+  background: var(--chaos-accent-soft, rgba(156, 39, 176, 0.12));
+  color: var(--chaos-accent, #9c27b0);
+  font-weight: 600;
+}
+
+.canvas-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Make sure the vflow canvas fills the wrapper */
+.canvas-wrapper vflow {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ngx-vflow renders each node inside an SVG <foreignObject> that clips overflowing
+   content by default: the node dropdown must escape that box to stay visible. */
+:host ::ng-deep foreignObject {
+  overflow: visible;
+}
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 30px;
+}

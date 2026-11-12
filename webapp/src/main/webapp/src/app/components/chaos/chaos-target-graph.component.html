@@ -1,0 +1,29 @@
+<div class="target-graph">
+  <div class="graph-hint">
+    <h5 class="graph-title"><span class="fa fa-sitemap"></span> APIs &amp; operations</h5>
+    <p class="hint-text text-muted">
+      Click an <strong>operation</strong> to add a modifier on it, a <strong>service</strong> or the
+      <strong>external user</strong> to target all the operations below it (<code>*</code>).
+      <span class="badge modifier-count-badge">{{ editor.tracks().length }} modifier(s) in experiment</span>
+    </p>
+  </div>
+
+  <div class="canvas-wrapper">
+    <vflow
+      *ngIf="nodes.length > 0"
+      [nodes]="nodes"
+      [edges]="edges"
+      view="auto"
+      [background]="{ type: 'dots', backgroundColor: 'var(--bs-light)' }"
+      [minZoom]="0.2"
+    >
+      <mini-map [scaleOnHover]="false" />
+    </vflow>
+
+    <div *ngIf="nodes.length === 0" class="empty-state">
+      <div class="empty-icon">🗂️</div>
+      <p>No API in the catalog yet</p>
+      <p class="text-muted">Import services to target them with chaos modifiers.</p>
+    </div>
+  </div>
+</div>

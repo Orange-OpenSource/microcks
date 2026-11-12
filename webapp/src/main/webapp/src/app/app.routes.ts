@@ -15,6 +15,7 @@ import { HubPackagePageComponent } from './pages/hub/package/package.page';
 import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
 import { AdminPageComponent } from './pages/admin/admin.page';
 import { TracesGraphPageComponent } from './pages/traces/traces-graph.page';
+import { ChaosPageComponent } from './pages/chaos/chaos.page';
 
 export const routes: Routes = [
   {
@@ -76,5 +77,13 @@ export const routes: Routes = [
   {
     path: 'traces',
     component: TracesGraphPageComponent
+  },
+  {
+    path: 'chaos/:experimentId',
+    component: ChaosPageComponent
+  },
+  {
+    path: 'chaos',
+    component: ChaosPageComponent
   }
 ];

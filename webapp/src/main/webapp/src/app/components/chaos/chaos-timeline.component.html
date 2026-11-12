@@ -1,0 +1,178 @@
+<div class="chaos-timeline-panel">
+  <div class="tl-body" #scrollContainer>
+    <div class="tl-inner" [style.width.px]="HEADER_WIDTH + laneWidth()" [style.minHeight.px]="contentHeight() + 8">
+      <!-- Ruler row -->
+      <div class="tl-row ruler-row" (mousedown)="startScrub($event)" title="Click or drag to move the playhead">
+        <div class="tl-header corner" (mousedown)="$event.stopPropagation()">
+          <div class="corner-time">
+            <span class="fa fa-clock-o"></span>
+            {{ formatTime(playheadMs()) }}
+            <small class="total">/ {{ formatTime(durationMs()) }}</small>
+          </div>
+          <div class="zoom-controls">
+            <button class="btn btn-default btn-xs" (click)="zoomOut()" title="Zoom out"><span class="fa fa-search-minus"></span></button>
+            <button class="btn btn-default btn-xs" (click)="fit()" title="Fit the whole duration"><span class="fa fa-arrows-h"></span></button>
+            <button class="btn btn-default btn-xs" (click)="zoomIn()" title="Zoom in"><span class="fa fa-search-plus"></span></button>
+          </div>
+        </div>
+        <div class="tl-lane ruler" #rulerElement>
+          @for (tick of ticks(); track tick.timeMs) {
+            <div class="tick" [style.left.px]="tick.px">
+              <div class="tick-line"></div>
+              <span class="tick-label">{{ tick.label }}</span>
+            </div>
+          }
+          <div class="playhead-handle" [style.left.px]="playheadPx()"></div>
+        </div>
+      </div>
+
+      <!-- Track rows -->
+      @for (row of rows(); track row.id) {
+        <div
+          class="tl-row track-row"
+          [attr.data-track-id]="row.id"
+          [class.selected]="editor.selectedTrackId() === row.id"
+          [class.dragging]="draggingTrackId() === row.id"
+          [class.drop-above]="dropIndex() === $index"
+          [class.drop-below]="dropIndex() === $index + 1"
+        >
+          <div class="tl-header track-header">
+            <span
+              class="drag-handle"
+              (mousedown)="startReorder($event, row)"
+              title="Drag to change the stacking order (application order)"
+            >
+              <span class="fa fa-bars"></span>
+            </span>
+            @if (row.hasParams) {
+              <button
+                class="caret-btn"
+                (click)="editor.toggleExpanded(row.id)"
+                [title]="row.expanded ? 'Collapse parameters' : 'Show parameter keyframes'"
+              >
+                <span class="fa" [class.fa-caret-right]="!row.expanded" [class.fa-caret-down]="row.expanded"></span>
+              </button>
+            }
+            <span class="track-dot" [style.background]="row.color"></span>
+            @if (renamingTrackId() === row.id) {
+              <input
+                type="text"
+                class="rename-input form-control form-control-sm"
+                #renameInput
+                [(ngModel)]="renameValue"
+                (keyup.enter)="$event.target.blur()"
+                (keyup.escape)="cancelRename($event)"
+                (blur)="commitRename()"
+              />
+            } @else {
+              <span class="track-name" (dblclick)="startRename(row)" title="Double-click to rename">
+                {{ row.id }}
+              </span>
+            }
+            <small class="track-target">{{ row.serviceName || '?' }} · {{ row.operationName || '?' }}</small>
+            <button class="btn btn-link btn-xs remove-btn" (click)="removeTrack($event, row)" title="Remove modifier">
+              <span class="fa fa-trash text-muted"></span>
+            </button>
+          </div>
+
+          <div
+            class="tl-lane track-lane"
+            [class.selected]="editor.selection()?.trackId === row.id && editor.selection()?.param === 'probability'"
+            (mousedown)="onLaneMouseDown($event, row)"
+            (dblclick)="onLaneDblClick($event, row, 'probability')"
+            title="Click to move the playhead, double-click to add a probability keyframe"
+          >
+            @if (row.probabilityCurve) {
+              <svg
+                class="lane-curve"
+                [attr.viewBox]="'0 0 ' + laneWidth() + ' ' + TRACK_ROW_HEIGHT"
+                preserveAspectRatio="none"
+              >
+                <path [attr.d]="row.probabilityArea" class="curve-area probability" />
+                <path [attr.d]="row.probabilityCurve" class="curve-line probability" />
+              </svg>
+            }
+            <div
+              class="clip"
+              [style.left.px]="row.startPx"
+              [style.width.px]="row.widthPx"
+              [style.border-color]="row.color"
+              [class.selected]="editor.selectedTrackId() === row.id"
+              (mousedown)="onClipMouseDown($event, row)"
+              title="Drag to move, drag the edges to trim"
+            >
+              <span class="clip-label" [style.color]="row.color">{{ row.id }} · {{ row.livePercent }}%</span>
+              <div class="clip-edge left" (mousedown)="onEdgeMouseDown($event, row, 'start')" title="Trim start"></div>
+              <div class="clip-edge right" (mousedown)="onEdgeMouseDown($event, row, 'end')" title="Trim end"></div>
+            </div>
+             @for (keyframe of row.probabilityKeyframes; track keyframe.index) {
+              <div
+                class="keyframe probability"
+                [class.dormant]="keyframe.dormant"
+                [class.selected]="isKeyframeSelected(row, 'probability', keyframe.index)"
+                [style.left.px]="keyframe.px"
+                (mousedown)="onKeyframeMouseDown($event, row, 'probability', keyframe)"
+                (dblclick)="$event.stopPropagation()"
+                title="probability = {{ (keyframe.value * 100).toFixed(0) }}% at {{ formatTime(keyframe.timeMs) }}{{ keyframe.dormant ? ' (outside the modifier window)' : '' }} — drag to move, Delete to remove"
+              ></div>
+            }
+          </div>
+        </div>
+
+        <!-- Expanded parameter lanes -->
+        @if (row.expanded) {
+          @for (param of row.params; track param.key) {
+            <div class="tl-row param-row-line">
+              <div class="tl-header param-header">
+                <span class="param-name">{{ param.label }}</span>
+                <span class="kf-count">{{ param.keyframes.length }} kf</span>
+              </div>
+              <div
+                class="tl-lane param-lane"
+                [class.selected]="editor.selection()?.trackId === row.id && editor.selection()?.param === param.key"
+                (mousedown)="onLaneMouseDown($event, row)"
+                (dblclick)="onLaneDblClick($event, row, param.key)"
+                title="Click to move the playhead, double-click to add a keyframe"
+              >
+                @if (param.curvePath) {
+                  <svg
+                    class="lane-curve"
+                    [attr.viewBox]="'0 0 ' + laneWidth() + ' ' + PARAM_ROW_HEIGHT"
+                    preserveAspectRatio="none"
+                  >
+                    <path [attr.d]="param.areaPath" [class]="'curve-area ' + param.key" />
+                    <path [attr.d]="param.curvePath" [class]="'curve-line ' + param.key" />
+                  </svg>
+                }
+                @for (keyframe of param.keyframes; track keyframe.index) {
+                  <div
+                    class="keyframe"
+                    [class.probability]="param.key === 'probability'"
+                    [class.status]="param.key === 'statusCode'"
+                    [class.selected]="isKeyframeSelected(row, param.key, keyframe.index)"
+                    [style.left.px]="keyframe.px"
+                    (mousedown)="onKeyframeMouseDown($event, row, param.key, keyframe)"
+                    (dblclick)="$event.stopPropagation()"
+                    title="{{ param.label }} = {{ param.key === 'probability' ? (keyframe.value * 100).toFixed(0) + '%' : keyframe.value }} at {{ formatTime(keyframe.timeMs) }} — drag to move, Delete to remove"
+                  ></div>
+                }
+              </div>
+            </div>
+          }
+        }
+      } @empty {
+        <div class="tl-empty">
+          <span class="fa fa-film"></span>
+          No modifier yet — add one from the effect controls panel.
+        </div>
+      }
+
+      <!-- Playhead -->
+      @if (editor.tracks().length > 0) {
+        <div class="tl-playhead" [style.left.px]="HEADER_WIDTH + playheadPx()">
+          <div class="playhead-cap"></div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

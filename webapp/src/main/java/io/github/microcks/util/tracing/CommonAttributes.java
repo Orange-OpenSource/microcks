@@ -86,4 +86,17 @@ public class CommonAttributes {
 
    /** A 'error.status' span attribute. */
    public static final AttributeKey<Long> ERROR_STATUS = AttributeKey.longKey("error.status");
+
+   /** A 'chaos.experiment.id' span attribute. */
+   public static final AttributeKey<String> CHAOS_EXPERIMENT_ID = AttributeKey.stringKey("chaos.experiment.id");
+   /** A 'chaos.experiment.name' span attribute. */
+   public static final AttributeKey<String> CHAOS_EXPERIMENT_NAME = AttributeKey.stringKey("chaos.experiment.name");
+   /** A 'chaos.track.id' span attribute. */
+   public static final AttributeKey<String> CHAOS_TRACK_ID = AttributeKey.stringKey("chaos.track.id");
+   /** A 'chaos.fault.type' span attribute. */
+   public static final AttributeKey<String> CHAOS_FAULT_TYPE = AttributeKey.stringKey("chaos.fault.type");
+   /** A 'chaos.position.ms' span attribute. */
+   public static final AttributeKey<Long> CHAOS_POSITION_MS = AttributeKey.longKey("chaos.position.ms");
+   /** A 'chaos.probability' span attribute. */
+   public static final AttributeKey<Double> CHAOS_PROBABILITY = AttributeKey.doubleKey("chaos.probability");
 }

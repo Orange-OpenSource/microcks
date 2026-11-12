@@ -1,0 +1,173 @@
+<div class="effect-controls">
+  <div class="effects-header">
+    <h5 class="panel-title">
+      <span class="fa fa-magic"></span> Modifiers
+      <span class="count">{{ editor.tracks().length }}</span>
+    </h5>
+    <div class="add-menu">
+      <button
+        class="btn btn-default btn-sm"
+        (click)="toggleAdd()"
+        [disabled]="!editor.experiment()"
+        title="Add a fault modifier to the experiment"
+      >
+        <span class="fa fa-plus"></span> Add <span class="caret"></span>
+      </button>
+      @if (addOpen()) {
+        <div class="add-menu-backdrop" (click)="addOpen.set(false)"></div>
+        <ul class="add-menu-list">
+          @for (entry of modifierCatalog(); track entry.type) {
+            <li>
+              <button class="add-menu-item" (click)="addModifier(entry.type)">
+                <i class="fa {{ icon(entry.type) }}" aria-hidden="true"></i>
+                <span>
+                  <span class="item-label">{{ entry.label }}</span>
+                  <small class="item-description">{{ entry.description }}</small>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+
+  <!-- Selected modifier editor -->
+  @if (selectedTrack(); as track) {
+    <div class="modifier-editor">
+      <div class="editor-section">
+        <label class="field-label" for="modifier-name">Name</label>
+        <input
+          id="modifier-name"
+          type="text"
+          class="form-control form-control-sm"
+          [ngModel]="track.id"
+          [ngModelOptions]="{ updateOn: 'blur' }"
+          (ngModelChange)="onNameChange(track.id, $event)"
+          (keyup.enter)="$event.target.blur()"
+        />
+      </div>
+
+      <div class="editor-section">
+        <label class="field-label">Target</label>
+        <select
+          class="form-control form-control-sm"
+          [ngModel]="track.serviceName || ''"
+          [ngModelOptions]="{ updateOn: 'change' }"
+          (ngModelChange)="onServiceChange(track.id, $event)"
+        >
+          <option value="">— Select a service —</option>
+          <option value="*">All services (*)</option>
+          @for (service of editor.services(); track service.id) {
+            <option [value]="service.name">{{ service.name }} ({{ service.version }})</option>
+          }
+        </select>
+        <select
+          class="form-control form-control-sm"
+          [ngModel]="track.operationName || ''"
+          [ngModelOptions]="{ updateOn: 'change' }"
+          (ngModelChange)="onOperationChange(track.id, track.serviceName, $event)"
+          [disabled]="!track.serviceName"
+        >
+          <option value="">— Select an operation —</option>
+          <option value="*">All operations (*)</option>
+          @for (operation of editor.operationsOf(track.serviceName); track operation.name) {
+            <option [value]="operation.name">{{ operation.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="editor-section">
+        <label class="field-label">Parameters</label>
+        @for (spec of keyframeableParams(); track spec.key) {
+          <div
+            class="param-row"
+            [class.keyframed]="isAnimated(track.id, spec)"
+            [class.selected]="editor.selection()?.trackId === track.id && editor.selection()?.param === spec.key"
+            (click)="editor.selectParam(track.id, spec.key)"
+          >
+            <span class="param-name">{{ spec.label }}</span>
+            <div class="param-input">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [ngModel]="displayValue(track.id, spec)"
+                [ngModelOptions]="{ updateOn: 'blur' }"
+                (ngModelChange)="commitValue(track.id, spec, $event)"
+                (keyup.enter)="$event.target.blur()"
+                [title]="isAnimated(track.id, spec) ? 'Sets a keyframe at the playhead' : 'Constant value across the clip'"
+              />
+              <span class="unit">{{ spec.key === 'probability' ? '%' : '' }}</span>
+            </div>
+            <button
+              class="icon-btn stopwatch"
+              [class.on]="isAnimated(track.id, spec)"
+              (click)="editor.toggleStopwatch(track.id, spec.key)"
+              title="Stopwatch: animate this parameter over time (adds/removes the interior keyframes)"
+            >
+              <span class="fa fa-clock-o"></span>
+            </button>
+            <button
+              class="icon-btn diamond-btn"
+              [class.at-playhead]="hasKeyAtPlayhead(track.id, spec)"
+              (click)="editor.toggleKeyframeAtPlayhead(track.id, spec.key)"
+              title="Add or remove a keyframe at the playhead"
+            >
+              <span class="diamond"></span>
+            </button>
+          </div>
+          <div class="param-keyframes"
+             (click)="seekFromStrip($event, track.id)"
+             title="Keyframes of {{ spec.label }} over the experiment — click to move the playhead">
+            @for (marker of keyframeMarkers(track.id, spec); track marker.index) {
+              <span class="keyframe-dot" [class.at-playhead]="marker.atPlayhead" [style.left.%]="marker.percent"></span>
+            }
+          </div>
+          <div class="param-live">
+            <span class="live-label">live</span> {{ liveAtPlayhead(track.id, spec) }}
+            <span class="kf-count">{{ keyframeCount(track.id, spec) }} keyframe{{ keyframeCount(track.id, spec) > 1 ? 's' : '' }}</span>
+          </div>
+        }
+      </div>
+
+      @for (param of staticParams(); track param.name) {
+        <div class="editor-section">
+          <label class="field-label" for="static-{{ param.name }}">{{ param.label }}</label>
+          @if (isNumericParam(param)) {
+            <input
+              id="static-{{ param.name }}"
+              type="text"
+              class="form-control form-control-sm"
+              [ngModel]="staticValue(track, param.name)"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="onStaticChange(track.id, param, $event)"
+              (keyup.enter)="$event.target.blur()"
+              title="Static {{ param.label }}"
+            />
+          } @else {
+            <textarea
+              id="static-{{ param.name }}"
+              class="form-control form-control-sm"
+              rows="3"
+              [ngModel]="staticValue(track, param.name)"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="onStaticChange(track.id, param, $event)"
+            ></textarea>
+          }
+          <small class="text-muted">Static value. Not keyframeable.</small>
+        </div>
+      }
+
+      <div class="editor-footer">
+        <button class="btn btn-danger btn-sm btn-block" (click)="editor.removeTrack(track.id)">
+          <span class="fa fa-trash"></span> Remove modifier
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="no-selection">
+      <span class="fa fa-hand-pointer-o"></span>
+      Select a modifier to edit its live parameters.
+    </div>
+  }
+</div>
