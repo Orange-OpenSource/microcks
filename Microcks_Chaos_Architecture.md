@@ -725,6 +725,19 @@ cd webapp/src/main/webapp
 npm run build
 ```
 
+Beyond the Maven tests, `testsuite/chaos-usage-test.js` is a standalone k6 harness launched separately. It is
+self-sufficient and non-destructive: it imports the two mocked APIs it needs (when missing) and the chaos experiment
+`k6-degradation-storm` (an existing same-named experiment is updated, stopped and restarted, never deleted), drives a
+10-minute load on three mocked APIs and stops the experiment at the end. The storm is one experiment with one track
+per intention: a 12-keyframe latency ramp on the pastry API (0-2.5min), graduated 429 rate limiting (2.5-5min), an
+escalating 5xx outage rotating 500/502/503 (5-7.5min) then timeouts (30s latency above the 10s client timeout,
+7.5-10min); two extra layers overlap the Petstore API with 429s (3-5min) and 5xx (5.5-8min) so both services degrade
+at the same time. Run it with the k6 web dashboard (`K6_WEB_DASHBOARD=true`, optionally `K6_WEB_DASHBOARD_EXPORT=...`
+for a standalone interactive HTML): the dashboard charts built-in metrics only, so the exported report is
+post-processed by `testsuite/chaos-report-panels.py`, which injects a Chaos tab plotting the evolution of the
+`storm_*` / `petstore_*` fault shares, storm latency and request rates, with `baseline_item_duration` as the clean
+control. See `testsuite/README.md`.
+
 ---
 
 ## 13. Quick reference
